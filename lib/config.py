@@ -14,16 +14,17 @@ MARKET_PRICE_DERIVE_NUM_POINTS = 8 #number of last trades over which to derive t
 
 # FROM counterpartyd
 # NOTE: These constants must match those in counterpartyd/lib/config.py
-REGULAR_DUST_SIZE = UNIT
-MULTISIG_DUST_SIZE = UNIT * 2
+REGULAR_DUST_SIZE = 0.0001 * UNIT
+MULTISIG_DUST_SIZE = 0.0001 * UNIT * 2
 ORDER_BTC_DUST_LIMIT_CUTOFF = MULTISIG_DUST_SIZE
 
 mongo_db = None #will be set on server init
 
-BTC = 'DOGE'
-XCP = 'XDP'
+BTC = 'PEPE'
+XCP = 'KDAQ'
 
-MAX_REORG_NUM_BLOCKS = 10 #max reorg we'd likely ever see
+MAX_REORG_NUM_BLOCKS = 30 #max reorg we'd likely ever see
 
+ARMORY_UTXSVR_ENABLE = false
 ARMORY_UTXSVR_PORT_MAINNET = 6590
 ARMORY_UTXSVR_PORT_TESTNET = 6591
