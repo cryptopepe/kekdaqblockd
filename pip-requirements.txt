@@ -25,12 +25,12 @@ pycoin==0.42
 
 pymongo==2.7.1
 
-https://github.com/surfly/gevent/archive/5f17846ec78d2c3439fb30fb304e0a99268e507e.zip#egg=gevent
+#https://github.com/surfly/gevent/archive/5f17846ec78d2c3439fb30fb304e0a99268e507e.zip#egg=gevent
 #^ 1.0.1 is a bit old. this is an up to date master that has some good bug fixes...
-
+gevent==1.2.2
 gevent-socketio==0.3.6
 
-geventhttpclient==1.1.0
+geventhttpclient==1.3.1
 
 redis==2.10.1
 

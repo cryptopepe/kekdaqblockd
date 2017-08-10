@@ -4,6 +4,7 @@ VERSION = "1.4.0" #should keep up with the counterwallet version it works with (
 DB_VERSION = 22 #a db version increment will cause counterblockd to rebuild its database off of counterpartyd 
 
 CAUGHT_UP = False #atomic state variable, set to True when counterpartyd AND counterblockd are caught up
+BLOCK_FIRST = 668000
 
 UNIT = 100000000
 
@@ -25,6 +26,8 @@ XCP = 'KDAQ'
 
 MAX_REORG_NUM_BLOCKS = 30 #max reorg we'd likely ever see
 
-ARMORY_UTXSVR_ENABLE = false
+ARMORY_UTXSVR_ENABLE = 0
 ARMORY_UTXSVR_PORT_MAINNET = 6590
 ARMORY_UTXSVR_PORT_TESTNET = 6591
+
+BLOCKCHAIN_SERVICE_NAME = 'insight'
