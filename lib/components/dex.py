@@ -50,7 +50,7 @@ def get_pairs_with_orders(addresses=[], max_pairs=12):
             'quote_asset': quote_asset,
             'my_order_count': my_pair['order_count']
         }
-        if my_pair['pair'] == 'DOGE/XDP': # XDP/DOGE always in first
+        if my_pair['pair'] == 'PEPE/KDAQ': # XDP/DOGE always in first
             pairs_with_orders.insert(0, top_pair)
         else:
             pairs_with_orders.append(top_pair)
@@ -58,7 +58,7 @@ def get_pairs_with_orders(addresses=[], max_pairs=12):
     return pairs_with_orders
 
 
-def get_xcp_or_btc_pairs(asset='XDP', exclude_pairs=[], max_pairs=12, from_time=None):
+def get_xcp_or_btc_pairs(asset='KDAQ', exclude_pairs=[], max_pairs=12, from_time=None):
 
     bindings = []
 
@@ -91,9 +91,9 @@ def get_xcp_or_btc_pairs(asset='XDP', exclude_pairs=[], max_pairs=12, from_time=
     if from_time:
         sql += '''INNER JOIN blocks ON order_matches.block_index = blocks.block_index '''
 
-    if asset == 'XDP':
+    if asset == 'KDAQ':
         sql += '''WHERE ((forward_asset = ? AND backward_asset != ?) OR (forward_asset != ? AND backward_asset = ?)) '''
-        bindings += [asset, 'DOGE', 'DOGE', asset]
+        bindings += [asset, 'PEPE', 'PEPE', asset]
     else:
         sql += '''WHERE ((forward_asset = ?) OR (backward_asset = ?)) '''
         bindings += [asset, asset]
@@ -119,10 +119,10 @@ def get_xcp_and_btc_pairs(exclude_pairs=[], max_pairs=12, from_time=None):
 
     all_pairs = []
 
-    for currency in ['XDP', 'DOGE']:
+    for currency in ['KDAQ', 'PEPE']:
         currency_pairs = get_xcp_or_btc_pairs(asset=currency, exclude_pairs=exclude_pairs, max_pairs=max_pairs, from_time=from_time)
         for currency_pair in currency_pairs:
-            if currency_pair['pair'] == 'XDP/DOGE':
+            if currency_pair['pair'] == 'KDAQ/PEPE':
                 all_pairs.insert(0, currency_pair)
             else:
                 all_pairs.append(currency_pair)
@@ -142,7 +142,7 @@ def get_users_pairs(addresses=[], max_pairs=12):
         exclude_pairs += [p['base_asset'] + '/' + p['quote_asset']]
         all_assets += [p['base_asset'], p['quote_asset']]
 
-    for currency in ['XDP', 'DOGE']:
+    for currency in ['KDAQ', 'PEPE']:
         if len(top_pairs) < max_pairs:
             limit = max_pairs - len(top_pairs)
             currency_pairs = get_xcp_or_btc_pairs(currency, exclude_pairs, limit)
@@ -151,18 +151,18 @@ def get_users_pairs(addresses=[], max_pairs=12):
                     'base_asset': currency_pair['base_asset'],
                     'quote_asset': currency_pair['quote_asset']
                 }
-                if currency_pair['pair'] == 'XDP/DOGE': # XDP/DOGE always in first
+                if currency_pair['pair'] == 'KDAQ/PEPE': # XDP/DOGE always in first
                     top_pairs.insert(0, top_pair)
                 else:
                     top_pairs.append(top_pair)
                 all_assets += [currency_pair['base_asset'], currency_pair['quote_asset']]
 
-    if 'XDP/DOGE' not in [p['base_asset'] + '/' + p['quote_asset'] for p in top_pairs]:
+    if 'KDAQ/PEPE' not in [p['base_asset'] + '/' + p['quote_asset'] for p in top_pairs]:
         top_pairs.insert(0, {
-            'base_asset': 'XDP',
-            'quote_asset': 'DOGE'
+            'base_asset': 'KDAQ',
+            'quote_asset': 'PEPE'
         })
-        all_assets += ['XDP', 'DOGE']
+        all_assets += ['KDAQ', 'PEPE']
 
     top_pairs = top_pairs[:12]
     all_assets = list(set(all_assets))
@@ -206,7 +206,7 @@ def get_market_orders(asset1, asset2, addresses=[], supplies=None, min_fee_provi
         user_order = {}
 
         exclude = False
-        if order['give_asset'] == 'DOGE':
+        if order['give_asset'] == 'PEPE':
             try:
                 fee_provided = order['fee_provided'] / (order['give_quantity'] / 100)
                 user_order['fee_provided'] = format(D(order['fee_provided']) / (D(order['give_quantity']) / D(100)), '.2f')
@@ -215,7 +215,7 @@ def get_market_orders(asset1, asset2, addresses=[], supplies=None, min_fee_provi
 
             exclude = fee_provided < min_fee_provided
 
-        elif order['get_asset'] == 'DOGE':
+        elif order['get_asset'] == 'PEPE':
             try:
                 fee_required = order['fee_required'] / (order['get_quantity'] / 100)
                 user_order['fee_required'] = format(D(order['fee_required']) / (D(order['get_quantity']) / D(100)), '.2f')
@@ -334,13 +334,13 @@ def get_assets_supply(assets=[]):
 
     supplies = {}
 
-    if 'XDP' in assets:
-        supplies['XDP'] = (util.call_jsonrpc_api('get_xcp_supply', [])['result'], True)
-        assets.remove('XDP')
+    if 'KDAQ' in assets:
+        supplies['KDAQ'] = (util.call_jsonrpc_api('get_xcp_supply', [])['result'], True)
+        assets.remove('KDAQ')
 
-    if 'DOGE' in assets:
-        supplies['DOGE'] = (0, True)
-        assets.remove('DOGE')
+    if 'PEPE' in assets:
+        supplies['PEPE'] = (0, True)
+        assets.remove('PEPE')
 
     if len(assets) > 0:
         sql = '''SELECT asset, SUM(quantity) AS supply, divisible FROM issuances
@@ -452,7 +452,7 @@ def get_markets_list(mongo_db=None):
         market['divisible'] = supplies[pair['base_asset']][1]
         market['market_cap'] = format(D(market['supply']) * D(market['price']), ".4f")
         market['with_image'] = True if pair['base_asset'] in asset_with_image else False
-        if market['base_asset'] == 'XDP' and market['quote_asset'] == 'DOGE':
+        if market['base_asset'] == 'KDAQ' and market['quote_asset'] == 'PEPE':
             markets.insert(0, market)
         else:
             markets.append(market)
