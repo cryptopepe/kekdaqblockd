@@ -32,7 +32,7 @@ import strict_rfc3339, rfc3987, aniso8601
 
 from lib import config, util_bitcoin
 
-JSONRPC_API_REQUEST_TIMEOUT = 10 #in seconds
+JSONRPC_API_REQUEST_TIMEOUT = 30 #in seconds
 D = decimal.Decimal
 
 
@@ -124,7 +124,7 @@ def call_jsonrpc_api(method, params=None, endpoint=None, auth=None, abort_on_err
         raise Exception("Got back error from server: %s" % result['error'])
     return result
 
-def get_url(url, abort_on_error=False, is_json=True, fetch_timeout=5):
+def get_url(url, abort_on_error=False, is_json=True, fetch_timeout=30):
     headers = { 'Connection':'close', } #no keepalive
 
     try:

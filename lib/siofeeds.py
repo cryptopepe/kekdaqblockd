@@ -73,8 +73,8 @@ class SocketIOMessagesFeedServer(object):
 
 class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
     MAX_TEXT_LEN = 500
-    TIME_BETWEEN_MESSAGES = 10 #in seconds (auto-adjust this in the future based on chat speed/volume)
-    NUM_HISTORY_LINES_ON_JOIN = 100
+    TIME_BETWEEN_MESSAGES = 2 #in seconds (auto-adjust this in the future based on chat speed/volume)
+    NUM_HISTORY_LINES_ON_JOIN = 500
     NUM_HISTORY_LINES_NO_REPEAT = 3 #max number of lines to go back ensuring the user is not repeating him/herself
     
     def disconnect(self, silent=False):
