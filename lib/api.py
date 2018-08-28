@@ -1190,9 +1190,9 @@ def serve_api(mongo_db, redis_client):
     def get_who_online():
       w = []
       l = list(mongo_db.chat_handles.find({}, {'_id': 0}).sort("when", pymongo.DESCENDING))
-            for x in l:
-                if x['wallet_id'] in onlineClients:            
-                    w.append(x['handle'])
+        for x in l:
+          if x['wallet_id'] in onlineClients:            
+            w.append(x['handle'])
       data = { 'handles': list(w) }
       return data
 
