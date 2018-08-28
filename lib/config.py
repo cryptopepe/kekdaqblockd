@@ -3,7 +3,7 @@ VERSION = "1.4.0" #should keep up with the counterwallet version it works with (
 
 DB_VERSION = 22 #a db version increment will cause counterblockd to rebuild its database off of counterpartyd 
 
-CAUGHT_UP = False #atomic state variable, set to True when counterpartyd AND counterblockd are caught up
+CAUGHT_UP = True #atomic state variable, set to True when counterpartyd AND counterblockd are caught up
 BLOCK_FIRST = 668000
 
 UNIT = 100000000

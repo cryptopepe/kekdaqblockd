@@ -127,7 +127,7 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
         """command is the command to run, args is a list of arguments to the command"""
         if 'is_op' not in self.socket.session:
             return self.error('invalid_state', "Invalid state") #this will trigger the client to auto re-establish state
-        if command not in ['online', 'msg', 'op', 'unop', 'ban', 'unban', 'handle', 'help', 'disextinfo', 'enextinfo']:
+        if command not in ['online', 'msg', 'who', 'op', 'unop', 'ban', 'unban', 'handle', 'help', 'disextinfo', 'enextinfo']:
             return self.error('invalid_command', "Unknown command: %s. Try /help for help." % command)
         if command not in ['online', 'msg', 'help'] and not self.socket.session['is_op']:
             return self.error('invalid_access', "Must be an op to use this command")
@@ -141,6 +141,12 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
             if not p:
                 return self.error('invalid_args', "Handle '%s' not found" % handle)
             return self.emit("online_status", p['handle'], p['wallet_id'] in onlineClients)
+        elif command == 'who': #/who
+            l = list(self.request['mongo_db'].chat_handles.find({}, {'_id': 0}).sort("when", pymongo.DESCENDING))
+            for x in l:
+                if x['wallet_id'] in onlineClients:            
+                    self.emit("who_online", x['handle'])
+            return
         elif command == 'msg': #/msg <handle> <message text>
             if not self.socket.session['is_primary_server']: return
             if len(args) < 2:
@@ -178,7 +184,7 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
             #make the change active immediately
             handle_lower = handle.lower()
             for sessid, socket in self.socket.server.sockets.iteritems():
-                if socket.session.get('handle', None).lower() == handle_lower:
+                if socket.session['handle'].lower() == handle_lower:
                     socket.session['is_op'] = p['is_op']
             if self.socket.session['is_primary_server']: #let all users know
                 self.broadcast_event("oped" if command == "op" else "unoped", self.socket.session['handle'], p['handle'])
@@ -202,8 +208,9 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
             #make the change active immediately
             handle_lower = handle.lower()
             for sessid, socket in self.socket.server.sockets.iteritems():
-                if socket.session.get('handle', None).lower() == handle_lower:
-                    socket.session['banned_until'] = p['banned_until']
+		if 'handle' in socket.session:
+                    if socket.session['handle'].lower() == handle_lower:
+                        socket.session['banned_until'] = p['banned_until']
             if self.socket.session['is_primary_server']: #let all users know
                 self.broadcast_event("banned", self.socket.session['handle'], p['handle'], ban_period,
                     int(time.mktime(p['banned_until'].timetuple()))*1000 if p['banned_until'] != -1 else -1);
@@ -265,7 +272,7 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
         elif command == 'help':
             if self.socket.session['is_op']:
                 return self.emit('emote', None,
-                    "Valid commands: '/op', '/unop', '/ban', '/unban', '/handle', '/online', '/enextinfo', '/disextinfo'. Type a command alone (i.e. with no arguments) to see the usage.",
+                    "Valid commands: '/op', '/unop', '/ban', '/unban', '/handle', '/online', '/who', '/enextinfo', '/disextinfo'. Type a command alone (i.e. with no arguments) to see the usage.",
                     False, False, True) #isOp = False, isPrivate = False, viaCommand = True
             else:
                 return self.emit('emote', None,

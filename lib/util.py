@@ -124,7 +124,7 @@ def call_jsonrpc_api(method, params=None, endpoint=None, auth=None, abort_on_err
         raise Exception("Got back error from server: %s" % result['error'])
     return result
 
-def get_url(url, abort_on_error=False, is_json=True, fetch_timeout=30):
+def get_url(url, abort_on_error=False, is_json=True, fetch_timeout=30, retries=0):
     headers = { 'Connection':'close', } #no keepalive
 
     try:
@@ -134,7 +134,11 @@ def get_url(url, abort_on_error=False, is_json=True, fetch_timeout=30):
         client = HTTPClient.from_url(u, **client_kwargs)
         r = client.get(u.request_uri, headers=headers)
     except Exception, e:
-        raise Exception("Got get_url request error: %s" % e)
+        if retries > 2:        
+            raise Exception("Got get_url request error: %s" % e)
+        else:
+            time.sleep(2)
+            return get_url(url, abort_on_error, is_json, fetch_timeout, retries+1)
     else:
         if r.status_code != 200 and abort_on_error:
             raise Exception("Bad status code returned: '%s'. result body: '%s'." % (r.status_code, r.read()))

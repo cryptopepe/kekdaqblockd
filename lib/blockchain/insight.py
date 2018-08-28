@@ -24,13 +24,13 @@ def getinfo():
     return util.get_url(get_host() + '/api/status?q=getInfo', abort_on_error=True)
 
 def listunspent(address):
-    return util.get_url(get_host() + '/api/addr/' + address + '/utxo/', abort_on_error=True)
+    return util.get_url(get_host() + '/api/addr/' + address + '/utxo/?noCache=1', abort_on_error=True)
 
 def getaddressinfo(address):
-    return util.get_url(get_host() + '/api/addr/' + address + '/', abort_on_error=True)
+    return util.get_url(get_host() + '/api/addr/' + address + '/?noCache=1', abort_on_error=True)
 
 def gettransaction(tx_hash):
-    return util.get_url(get_host() + '/api/tx/' + tx_hash + '/', abort_on_error=False)
+    return util.get_url(get_host() + '/api/tx/' + tx_hash + '/?noCache=1', abort_on_error=False)
 
 def get_pubkey_for_address(address):
     #first, get a list of transactions for the address

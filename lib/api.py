@@ -45,6 +45,14 @@ def serve_api(mongo_db, redis_client):
     tx_logger = logging.getLogger("transaction_log") #get transaction logger
 
     @dispatcher.add_method
+    def get_assets_names():
+        ret = []
+        assets = config.mongo_db.tracked_assets.find({}, {'_id': 0, '_history': 0}).sort("asset", pymongo.ASCENDING)
+        for e in assets:
+            ret.append({'asset': e['asset']})
+        return ret
+
+    @dispatcher.add_method
     def is_ready():
         """this method used by the client to check if the server is alive, caught up, and ready to accept requests.
         If the server is NOT caught up, a 525 error will be returned actually before hitting this point. Thus,
@@ -990,6 +998,8 @@ def serve_api(mongo_db, redis_client):
     @dispatcher.add_method
     def get_asset_extended_info(asset):
         ext_info = mongo_db.asset_extended_info.find_one({'asset': asset}, {'_id': 0})
+	if not ext_info:
+	    raise Exception("No extended asset info found")
         return ext_info or False
 
     @dispatcher.add_method
