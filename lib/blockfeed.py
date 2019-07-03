@@ -16,7 +16,7 @@ import pymongo
 import gevent
 
 from lib import config, util, events, blockchain, util_bitcoin
-from lib.components import assets, betting
+from lib.components import assets
 
 D = decimal.Decimal
 
@@ -294,9 +294,7 @@ def process_cpd_blockfeed(zmq_publisher_eventfeed):
                 #track message types, for compiling of statistics
                 try:
                     if msg['command'] == 'insert' \
-                       and msg['category'] not in ["debits", "credits", "order_matches", "bet_matches",
-                           "order_expirations", "bet_expirations", "order_match_expirations", "bet_match_expirations",
-                           "bet_match_resolutions"]:
+                       and msg['category'] not in ["debits", "credits", "order_matches", "order_expirations", "order_match_expirations"]:
                         mongo_db.transaction_stats.insert({
                             'block_index': cur_block_index,
                             'block_time': cur_block['block_time_obj'],
@@ -430,10 +428,6 @@ def process_cpd_blockfeed(zmq_publisher_eventfeed):
                     mongo_db.trades.insert(trade)
                     logging.info("Procesed Trade from tx %s :: %s" % (msg['message_index'], trade))
                 
-                #broadcast
-                if msg['category'] == 'broadcasts':
-                    betting.parse_broadcast(mongo_db, msg_data)
-
                 #if we're catching up beyond MAX_REORG_NUM_BLOCKS blocks out, make sure not to send out any socket.io
                 # events, as to not flood on a resync (as we may give a 525 to kick the logged in clients out, but we
                 # can't guarantee that the socket.io connection will always be severed as well??)
