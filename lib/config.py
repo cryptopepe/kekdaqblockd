@@ -16,7 +16,7 @@ MARKET_PRICE_DERIVE_NUM_POINTS = 8 #number of last trades over which to derive t
 # FROM counterpartyd
 # NOTE: These constants must match those in counterpartyd/lib/config.py
 REGULAR_DUST_SIZE = 0.0001 * UNIT
-MULTISIG_DUST_SIZE = 0.0001 * UNIT * 2
+MULTISIG_DUST_SIZE = 0.0001 * UNIT
 ORDER_BTC_DUST_LIMIT_CUTOFF = MULTISIG_DUST_SIZE
 
 mongo_db = None #will be set on server init
