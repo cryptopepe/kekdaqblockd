@@ -288,14 +288,6 @@ def serve_api(mongo_db, redis_client):
               'end_block': end_block,
             }, abort_on_error=True)['result']
 
-        address_dict['callbacks'] = util.call_jsonrpc_api("get_callbacks",
-            { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
-              'order_by': 'block_index',
-              'order_dir': 'asc',
-              'start_block': start_block,
-              'end_block': end_block,
-            }, abort_on_error=True)['result']
-
         address_dict['order_expirations'] = util.call_jsonrpc_api("get_order_expirations",
             { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
               'order_by': 'block_index',
@@ -991,6 +983,7 @@ def serve_api(mongo_db, redis_client):
           * 'new_owner': The address the asset was transferred to
         * IF type = 'called_back':
           * 'percentage': The percentage of the asset called back (between 0 and 100)
+        * All callback functions removed in kdaq for compliance
         """
         asset = mongo_db.tracked_assets.find_one({ 'asset': asset }, {"_id":0})
         if not asset:
@@ -1053,26 +1046,8 @@ def serve_api(mongo_db, redis_client):
                 })
             prev = raw[i]
 
-        #get callbacks externally via the cpd API, and merge in with the asset history we composed
-        callbacks = util.call_jsonrpc_api("get_callbacks",
-            {'filters': {'field': 'asset', 'op': '==', 'value': asset['asset']}}, abort_on_error=True)['result']
         final_history = []
-        if len(callbacks):
-            for e in history: #history goes from earliest to latest
-                if callbacks[0]['block_index'] < e['at_block']: #throw the callback entry in before this one
-                    block_time = util.get_block_time(callbacks[0]['block_index'])
-                    assert block_time
-                    final_history.append({
-                        'type': 'called_back',
-                        'at_block': callbacks[0]['block_index'],
-                        'at_block_time': time.mktime(block_time.timetuple()) * 1000,
-                        'percentage': callbacks[0]['fraction'] * 100,
-                    })
-                    callbacks.pop(0)
-                else:
-                    final_history.append(e)
-        else:
-            final_history = history
+        final_history = history
         if reverse: final_history.reverse()
         return final_history
 
