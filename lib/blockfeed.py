@@ -489,9 +489,6 @@ def process_cpd_blockfeed(zmq_publisher_eventfeed):
                 logging.debug("Starting event timer: compile_extended_asset_info")
                 gevent.spawn(events.compile_extended_asset_info)
 
-                logging.debug("Starting event timer: compile_extended_feed_info")
-                gevent.spawn(events.compile_extended_feed_info)
-
                 config.CAUGHT_UP_STARTED_EVENTS = True
 
             publish_mempool_tx()
