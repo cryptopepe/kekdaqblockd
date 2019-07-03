@@ -18,5 +18,5 @@ sudo pip install -r pip-requirements.txt
 
 ## Running kekdaqblockd:
 ```
-python2.7 counterblockd.py --counterpartyd-rpc-user pepeuser --counterpartyd-rpc-password pepepass --counterpartyd-rpc-port 4000 $1 $2 $3 $4
+python2.7 counterblockd.py --counterpartyd-rpc-user pepeuser --counterpartyd-rpc-password pepepass --counterpartyd-rpc-port 4000
 ```
