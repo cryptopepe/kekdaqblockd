@@ -24,7 +24,7 @@ from bson import json_util
 from bson.son import SON
 
 from lib import config, siofeeds, util, blockchain, util_bitcoin
-from lib.components import betting, rps, assets_trading, dex
+from lib.components import betting, assets_trading, dex
 
 PREFERENCES_MAX_LENGTH = 100000 #in bytes, as expressed in JSON
 API_MAX_LOG_SIZE = 10 * 1024 * 1024 #max log size of 20 MB before rotation (make configurable later)
@@ -1412,14 +1412,6 @@ def serve_api(mongo_db, redis_client):
     def parse_base64_feed(base64_feed):
         feed = betting.parse_base64_feed(base64_feed)
         return feed
-
-    @dispatcher.add_method
-    def get_open_rps_count(possible_moves = 3, exclude_addresses = []):
-        return rps.get_open_rps_count(possible_moves, exclude_addresses)
-
-    @dispatcher.add_method
-    def get_user_rps(addresses):
-        return rps.get_user_rps(addresses)
 
     @dispatcher.add_method
     def get_users_pairs(addresses=[], max_pairs=12):
