@@ -24,7 +24,7 @@ from bson import json_util
 from bson.son import SON
 
 from lib import config, siofeeds, util, blockchain, util_bitcoin
-from lib.components import betting, rps, assets_trading, dex
+from lib.components import assets_trading, dex
 
 PREFERENCES_MAX_LENGTH = 100000 #in bytes, as expressed in JSON
 API_MAX_LOG_SIZE = 10 * 1024 * 1024 #max log size of 20 MB before rotation (make configurable later)
@@ -126,7 +126,7 @@ def serve_api(mongo_db, redis_client):
             raise Exception("txn_hashes must be a list of txn hashes, even if it just contains one hash")
         results = []
         for tx_hash in txn_hashes:
-            tx_info = blockchain.gettransaction(tx_hash);
+            tx_info = blockchain.gettransaction(tx_hash)
             if tx_info:
                 assert tx_info['txid'] == tx_hash
                 results.append({
@@ -280,48 +280,7 @@ def serve_api(mongo_db, redis_client):
               'end_block': end_block,
             }, abort_on_error=True)['result']
 
-        address_dict['bets'] = util.call_jsonrpc_api("get_bets",
-            { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
-              'order_by': 'block_index',
-              'order_dir': 'asc',
-              'start_block': start_block,
-              'end_block': end_block,
-            }, abort_on_error=True)['result']
-
-        address_dict['bet_matches'] = util.call_jsonrpc_api("get_bet_matches",
-            { 'filters': [{'field': 'tx0_address', 'op': '==', 'value': address}, {'field': 'tx1_address', 'op': '==', 'value': address},],
-              'filterop': 'or',
-              'order_by': 'tx0_block_index',
-              'order_dir': 'asc',
-              'start_block': start_block,
-              'end_block': end_block,
-            }, abort_on_error=True)['result']
-
-        address_dict['dividends'] = util.call_jsonrpc_api("get_dividends",
-            { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
-              'order_by': 'block_index',
-              'order_dir': 'asc',
-              'start_block': start_block,
-              'end_block': end_block,
-            }, abort_on_error=True)['result']
-
         address_dict['cancels'] = util.call_jsonrpc_api("get_cancels",
-            { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
-              'order_by': 'block_index',
-              'order_dir': 'asc',
-              'start_block': start_block,
-              'end_block': end_block,
-            }, abort_on_error=True)['result']
-
-        address_dict['callbacks'] = util.call_jsonrpc_api("get_callbacks",
-            { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
-              'order_by': 'block_index',
-              'order_dir': 'asc',
-              'start_block': start_block,
-              'end_block': end_block,
-            }, abort_on_error=True)['result']
-
-        address_dict['bet_expirations'] = util.call_jsonrpc_api("get_bet_expirations",
             { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
               'order_by': 'block_index',
               'order_dir': 'asc',
@@ -331,15 +290,6 @@ def serve_api(mongo_db, redis_client):
 
         address_dict['order_expirations'] = util.call_jsonrpc_api("get_order_expirations",
             { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
-              'order_by': 'block_index',
-              'order_dir': 'asc',
-              'start_block': start_block,
-              'end_block': end_block,
-            }, abort_on_error=True)['result']
-
-        address_dict['bet_match_expirations'] = util.call_jsonrpc_api("get_bet_match_expirations",
-            { 'filters': [{'field': 'tx0_address', 'op': '==', 'value': address}, {'field': 'tx1_address', 'op': '==', 'value': address},],
-              'filterop': 'or',
               'order_by': 'block_index',
               'order_dir': 'asc',
               'start_block': start_block,
@@ -1033,6 +983,7 @@ def serve_api(mongo_db, redis_client):
           * 'new_owner': The address the asset was transferred to
         * IF type = 'called_back':
           * 'percentage': The percentage of the asset called back (between 0 and 100)
+        * All callback functions removed in kdaq for compliance
         """
         asset = mongo_db.tracked_assets.find_one({ 'asset': asset }, {"_id":0})
         if not asset:
@@ -1095,26 +1046,8 @@ def serve_api(mongo_db, redis_client):
                 })
             prev = raw[i]
 
-        #get callbacks externally via the cpd API, and merge in with the asset history we composed
-        callbacks = util.call_jsonrpc_api("get_callbacks",
-            {'filters': {'field': 'asset', 'op': '==', 'value': asset['asset']}}, abort_on_error=True)['result']
         final_history = []
-        if len(callbacks):
-            for e in history: #history goes from earliest to latest
-                if callbacks[0]['block_index'] < e['at_block']: #throw the callback entry in before this one
-                    block_time = util.get_block_time(callbacks[0]['block_index'])
-                    assert block_time
-                    final_history.append({
-                        'type': 'called_back',
-                        'at_block': callbacks[0]['block_index'],
-                        'at_block_time': time.mktime(block_time.timetuple()) * 1000,
-                        'percentage': callbacks[0]['fraction'] * 100,
-                    })
-                    callbacks.pop(0)
-                else:
-                    final_history.append(e)
-        else:
-            final_history = history
+        final_history = history
         if reverse: final_history.reverse()
         return final_history
 
@@ -1387,39 +1320,6 @@ def serve_api(mongo_db, redis_client):
             #decode out unicode for now (json-rpc lib was made for python 3.3 and does str(errorMessage) internally,
             # which messes up w/ unicode under python 2.x)
         return result['result']
-
-    @dispatcher.add_method
-    def get_bets(bet_type, feed_address, deadline, target_value=None, leverage=5040):
-        bets = betting.find_bets(bet_type, feed_address, deadline, target_value=target_value, leverage=leverage)
-        return bets
-
-    @dispatcher.add_method
-    def get_user_bets(addresses = [], status="open"):
-        bets = betting.find_user_bets(mongo_db, addresses, status)
-        return bets
-
-    @dispatcher.add_method
-    def get_feed(address_or_url = ''):
-        feed = betting.find_feed(mongo_db, address_or_url)
-        return feed
-
-    @dispatcher.add_method
-    def get_feeds_by_source(addresses = []):
-        feed = betting.get_feeds_by_source(mongo_db, addresses)
-        return feed
-
-    @dispatcher.add_method
-    def parse_base64_feed(base64_feed):
-        feed = betting.parse_base64_feed(base64_feed)
-        return feed
-
-    @dispatcher.add_method
-    def get_open_rps_count(possible_moves = 3, exclude_addresses = []):
-        return rps.get_open_rps_count(possible_moves, exclude_addresses)
-
-    @dispatcher.add_method
-    def get_user_rps(addresses):
-        return rps.get_user_rps(addresses)
 
     @dispatcher.add_method
     def get_users_pairs(addresses=[], max_pairs=12):

@@ -39,3 +39,6 @@ schema.py
 # MACOS Files
 .DS_Store
 ._.*
+
+#VSCode Files
+.history

@@ -152,11 +152,9 @@ def get_address_cols_for_entity(entity):
         return ['address',]
     elif entity in ['issuances',]:
         return ['issuer',]
-    elif entity in ['sends', 'dividends', 'bets', 'cancels', 'callbacks', 'orders', 'burns', 'broadcasts', 'btcpays']:
+    elif entity in ['sends', 'cancels', 'orders', 'burns', 'broadcasts', 'btcpays']:
         return ['source',]
-    #elif entity in ['order_matches', 'bet_matches']:
-    elif entity in ['order_matches', 'order_expirations', 'order_match_expirations',
-                    'bet_matches', 'bet_expirations', 'bet_match_expirations']:
+    elif entity in ['order_matches', 'order_expirations', 'order_match_expirations']:
         return ['tx0_address', 'tx1_address']
     else:
         raise Exception("Unknown entity type: %s" % entity)
@@ -244,7 +242,7 @@ def decorate_message(message, for_txn_history=False):
         block_index = message['block_index'] if 'block_index' in message else message['tx1_block_index']
         message['_block_time'] = get_block_time(block_index)
         message['_tx_index'] = message['tx_index'] if 'tx_index' in message else message.get('tx1_index', None)
-        if message['_category'] in ['bet_expirations', 'order_expirations', 'bet_match_expirations', 'order_match_expirations']:
+        if message['_category'] in ['order_expirations', 'order_match_expirations']:
             message['_tx_index'] = 0 #add tx_index to all entries (so we can sort on it secondarily in history view), since these lack it
 
     if message['_category'] in ['credits', 'debits']:
@@ -273,7 +271,7 @@ def decorate_message(message, for_txn_history=False):
              or ('backward_asset' in message and message['backward_asset'] == config.BTC and message['backward_quantity'] <= config.ORDER_BTC_DUST_LIMIT_CUTOFF)
         )
 
-    if message['_category'] in ['dividends', 'sends', 'callbacks']:
+    if message['_category'] in ['sends']:
         asset_info = mongo_db.tracked_assets.find_one({'asset': message['asset']})
         message['_divisible'] = asset_info['divisible'] if asset_info else None
 

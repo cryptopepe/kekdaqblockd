@@ -14,7 +14,7 @@ import gevent
 from PIL import Image
 
 from lib import config, util, blockchain
-from lib.components import assets, assets_trading, betting
+from lib.components import assets, assets_trading
 
 D = decimal.Decimal
 COMPILE_MARKET_PAIR_INFO_PERIOD = 10 * 60 #in seconds (this is every 10 minutes currently)
@@ -178,11 +178,6 @@ def compile_extended_asset_info():
     assets.fetch_all_asset_info(config.mongo_db)
     #call again in 60 minutes
     gevent.spawn_later(60 * 60, compile_extended_asset_info)
-
-def compile_extended_feed_info():
-    betting.fetch_all_feed_info(config.mongo_db)
-    #call again in 5 minutes
-    gevent.spawn_later(60 * 5, compile_extended_feed_info)
 
 def compile_asset_market_info():
     assets_trading.compile_asset_market_info()
