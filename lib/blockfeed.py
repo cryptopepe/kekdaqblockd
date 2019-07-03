@@ -124,7 +124,7 @@ def process_cpd_blockfeed(zmq_publisher_eventfeed):
             params = {
                 'filters': [
                     {'field':'tx_hash', 'op': 'NOT IN', 'value': tx_hashes},
-                    {'field':'category', 'op': 'IN', 'value': ['sends', 'btcpays', 'issuances', 'dividends', 'callbacks']}
+                    {'field':'category', 'op': 'IN', 'value': ['sends', 'btcpays', 'issuances', 'callbacks']}
                 ],
                 'filterop': 'AND'
             }

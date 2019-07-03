@@ -280,14 +280,6 @@ def serve_api(mongo_db, redis_client):
               'end_block': end_block,
             }, abort_on_error=True)['result']
 
-        address_dict['dividends'] = util.call_jsonrpc_api("get_dividends",
-            { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
-              'order_by': 'block_index',
-              'order_dir': 'asc',
-              'start_block': start_block,
-              'end_block': end_block,
-            }, abort_on_error=True)['result']
-
         address_dict['cancels'] = util.call_jsonrpc_api("get_cancels",
             { 'filters': [{'field': 'source', 'op': '==', 'value': address},],
               'order_by': 'block_index',
