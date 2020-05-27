@@ -13,7 +13,7 @@ import argparse
 import json
 import logging
 import datetime
-import ConfigParser
+import configparser
 import time
 import email.utils
 
@@ -28,7 +28,7 @@ redis.connection.socket = gevent.socket #make redis play well with gevent
 from socketio import server as socketio_server
 import pygeoip
 
-from lib import (config, api, events, blockfeed, siofeeds, util)
+from .lib import (config, api, events, blockfeed, siofeeds, util)
 
 
 if __name__ == '__main__':
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     if not os.path.isdir(config.DATA_DIR): os.mkdir(config.DATA_DIR)
 
     #Read config file
-    configfile = ConfigParser.ConfigParser()
+    configfile = configparser.ConfigParser()
     config_path = os.path.join(config.DATA_DIR, 'counterblockd.conf')
     configfile.read(config_path)
     has_config = configfile.has_section('Default')

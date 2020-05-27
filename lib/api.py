@@ -9,7 +9,7 @@ import operator
 import logging
 import copy
 import uuid
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import functools
 
 from logging import handlers as logging_handlers
@@ -311,10 +311,10 @@ def serve_api(mongo_db, redis_client):
     def get_last_n_messages(count=100):
         if count > 1000:
             raise Exception("The count is too damn high")
-        message_indexes = range(max(config.LAST_MESSAGE_INDEX - count, 0) + 1, config.LAST_MESSAGE_INDEX+1)
+        message_indexes = list(range(max(config.LAST_MESSAGE_INDEX - count, 0) + 1, config.LAST_MESSAGE_INDEX+1))
         messages = util.call_jsonrpc_api("get_messages_by_index",
             { 'message_indexes': message_indexes }, abort_on_error=True)['result']
-        for i in xrange(len(messages)):
+        for i in range(len(messages)):
             messages[i] = util.decorate_message_for_feed(messages[i])
         return messages
 
@@ -350,7 +350,7 @@ def serve_api(mongo_db, redis_client):
         txns = []
         d = _get_address_history(address, start_block=start_block_index, end_block=end_block_index)
         #mash it all together
-        for category, entries in d.iteritems():
+        for category, entries in d.items():
             if category in ['balances',]:
                 continue
             for e in entries:
@@ -540,7 +540,7 @@ def serve_api(mongo_db, redis_client):
 
         midline = [((r['high'] + r['low']) / 2.0) for r in result]
         if as_dict:
-            for i in xrange(len(result)):
+            for i in range(len(result)):
                 result[i]['interval_time'] = int(time.mktime(datetime.datetime(
                     result[i]['_id']['year'], result[i]['_id']['month'], result[i]['_id']['day'], result[i]['_id']['hour']).timetuple()) * 1000)
                 result[i]['midline'] = midline[i]
@@ -548,7 +548,7 @@ def serve_api(mongo_db, redis_client):
             return result
         else:
             list_result = []
-            for i in xrange(len(result)):
+            for i in range(len(result)):
                 list_result.append([
                     int(time.mktime(datetime.datetime(
                         result[i]['_id']['year'], result[i]['_id']['month'], result[i]['_id']['day'], result[i]['_id']['hour']).timetuple()) * 1000),
@@ -706,7 +706,7 @@ def serve_api(mongo_db, redis_client):
                 book.setdefault(id, {'unit_price': unit_price, 'quantity': 0, 'count': 0})
                 book[id]['quantity'] += remaining #base quantity outstanding
                 book[id]['count'] += 1 #num orders at this price level
-            book = sorted(book.itervalues(), key=operator.itemgetter('unit_price'), reverse=isBidBook)
+            book = sorted(iter(book.values()), key=operator.itemgetter('unit_price'), reverse=isBidBook)
             #^ convert to list and sort -- bid book = descending, ask book = ascending
             return book
 
@@ -866,7 +866,7 @@ def serve_api(mongo_db, redis_client):
             time_val = int(time.mktime(datetime.datetime(e['_id']['year'], e['_id']['month'], e['_id']['day']).timetuple()) * 1000)
             times.setdefault(time_val, True)
             categories[e['_id']['category']][time_val] = e['count']
-        times_list = times.keys()
+        times_list = list(times.keys())
         times_list.sort()
         #fill in each array with all found timestamps
         for e in categories:
@@ -876,7 +876,7 @@ def serve_api(mongo_db, redis_client):
             categories[e] = a #replace with array data
         #take out to final data structure
         categories_list = []
-        for k, v in categories.iteritems():
+        for k, v in categories.items():
             categories_list.append({'name': k, 'data': v})
         return categories_list
 
@@ -993,7 +993,7 @@ def serve_api(mongo_db, redis_client):
         history = []
         raw = asset['_history'] + [asset,] #oldest to newest. add on the current state
         prev = None
-        for i in xrange(len(raw)): #oldest to newest
+        for i in range(len(raw)): #oldest to newest
             if i == 0:
                 assert raw[i]['_change_type'] == 'created'
                 history.append({
@@ -1155,7 +1155,7 @@ def serve_api(mongo_db, redis_client):
     @dispatcher.add_method
     def store_chat_handle(wallet_id, handle):
         """Set or update a chat handle"""
-        if not isinstance(handle, basestring):
+        if not isinstance(handle, str):
             raise Exception("Invalid chat handle: bad data type")
         if not re.match(r'^[\sA-Za-z0-9_-]{4,12}$', handle):
             raise Exception("Invalid chat handle: bad syntax/length")

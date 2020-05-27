@@ -9,7 +9,7 @@ import copy
 import decimal
 import cgi
 import itertools
-import StringIO
+import io
 import subprocess
 
 import gevent
@@ -111,7 +111,7 @@ def call_jsonrpc_api(method, params=None, endpoint=None, auth=None, abort_on_err
         client = HTTPClient.from_url(u, connection_timeout=JSONRPC_API_REQUEST_TIMEOUT,
             network_timeout=JSONRPC_API_REQUEST_TIMEOUT)
         r = client.post(u.request_uri, body=json.dumps(payload), headers=headers)
-    except Exception, e:
+    except Exception as e:
         raise Exception("Got call_jsonrpc_api request error: %s" % e)
     else:
         if r.status_code != 200 and abort_on_error:
@@ -133,7 +133,7 @@ def get_url(url, abort_on_error=False, is_json=True, fetch_timeout=30, retries=0
         if u.scheme == "https": client_kwargs['ssl_options'] = {'cert_reqs': gevent.ssl.CERT_NONE}
         client = HTTPClient.from_url(u, **client_kwargs)
         r = client.get(u.request_uri, headers=headers)
-    except Exception, e:
+    except Exception as e:
         if retries > 2:        
             raise Exception("Got get_url request error: %s" % e)
         else:
@@ -163,7 +163,7 @@ def grouper(n, iterable, fillmissing=False, fillvalue=None):
     #Modified from http://stackoverflow.com/a/1625013
     "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
-    data = itertools.izip_longest(*args, fillvalue=fillvalue)
+    data = itertools.zip_longest(*args, fillvalue=fillvalue)
     if not fillmissing:
         data = [[e for e in g if e != fillvalue] for g in data]
     return data
@@ -203,7 +203,7 @@ def json_dthandler(obj):
         #give datetime objects to javascript as epoch ts in ms (i.e. * 1000)
         return int(time.mktime(obj.timetuple())) * 1000
     else:
-        raise TypeError, 'Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj))
+        raise TypeError('Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj)))
 
 def get_block_indexes_for_dates(start_dt=None, end_dt=None):
     """Returns a 2 tuple (start_block, end_block) result for the block range that encompasses the given start_date
@@ -310,7 +310,7 @@ fetch_timeout=1, is_json=True, per_request_complete_callback=None):
             if u.scheme == "https": client_kwargs['ssl_options'] = {'cert_reqs': gevent.ssl.CERT_NONE}
             client = HTTPClient.from_url(u, **client_kwargs)
             r = client.get(u.request_uri, headers={'Connection':'close'})
-        except Exception, e:
+        except Exception as e:
             data = (False, "Got exception: %s" % e)
         else:
             if r.status_code != 200:
@@ -322,13 +322,13 @@ fetch_timeout=1, is_json=True, per_request_complete_callback=None):
                     if is_json: #try to convert to JSON
                         try:
                             data = json.loads(raw_data)
-                        except Exception, e:
+                        except Exception as e:
                             data = (False, "Invalid JSON data: %s" % e)
                         else:
                             data = (True, data)
                     else: #keep raw
                         data = (True, raw_data)
-                except Exception, e:
+                except Exception as e:
                     data = (False, "Request error: %s" % e)
         finally:
             client.close()
@@ -359,7 +359,7 @@ fetch_timeout=1, is_json=True, per_request_complete_callback=None):
 
     urls = list(set(urls)) #remove duplicates (so we only fetch any given URL, once)
     groups = grouper(urls_group_size, urls)
-    for i in xrange(len(groups)):
+    for i in range(len(groups)):
         #logging.debug("Stream fetching group %i of %i..." % (i, len(groups)))
         group = groups[i]
         if urls_group_time_spacing and i != 0:
@@ -384,7 +384,7 @@ def fetch_image(url, folder, filename, max_size=20*1024, formats=['png'], dimens
             client = HTTPClient.from_url(u, **client_kwargs)
             r = client.get(u.request_uri, headers={'Connection':'close'})
             raw_image_data = r.read(max_size) #read up to max_size
-        except Exception, e:
+        except Exception as e:
             raise Exception("Got fetch_image request error: %s" % e)
         else:
             if r.status_code != 200:
@@ -394,8 +394,8 @@ def fetch_image(url, folder, filename, max_size=20*1024, formats=['png'], dimens
 
         #decode image data
         try:
-            image = Image.open(StringIO.StringIO(raw_image_data))
-        except Exception, e:
+            image = Image.open(io.StringIO(raw_image_data))
+        except Exception as e:
             raise Exception("Unable to parse image data at: %s" % url)
         if image.format.lower() not in formats: raise Exception("Image is not a PNG: %s (got %s)" % (url, image.format))
         if image.size != dimensions: raise Exception("Image size is not 48x48: %s (got %s)" % (url, image.size))
@@ -405,14 +405,14 @@ def fetch_image(url, folder, filename, max_size=20*1024, formats=['png'], dimens
         image.save(imagePath)
         os.system("exiftool -q -overwrite_original -all= %s" % imagePath) #strip all metadata, just in case
         return True
-    except Exception, e:
+    except Exception as e:
         logging.warn(e)
         return False
 
 def date_param(strDate):
     try:
         return calendar.timegm(dateutil.parser.parse(strDate).utctimetuple())
-    except Exception, e:
+    except Exception as e:
         return False
 
 def parse_iso8601_interval(value):
@@ -437,20 +437,20 @@ def is_valid_json(data, schema):
 def next_interval_date(interval):
     try:
         generator = parse_iso8601_interval(interval)
-    except Exception, e:
+    except Exception as e:
         return None
 
     def ts(dt):
         return time.mktime(dt.timetuple())
 
     previous = None
-    next = generator.next()
+    next = next(generator)
     now = datetime.datetime.now()
     while ts(next) < ts(now) and next != previous:
         try:
             previous = next
-            next = generator.next()
-        except Exception, e:
+            next = next(generator)
+        except Exception as e:
             break
 
     if ts(next) < ts(now):
@@ -461,7 +461,7 @@ def next_interval_date(interval):
 def subprocess_cmd(command):
     process = subprocess.Popen(command,stdout=subprocess.PIPE, shell=True)
     proc_stdout = process.communicate()[0].strip()
-    print proc_stdout
+    print(proc_stdout)
 
 def download_geoip_data():
     logging.info("Checking/updating GeoIP.dat ...")

@@ -9,7 +9,7 @@ import copy
 import logging
 import datetime
 import decimal
-import ConfigParser
+import configparser
 import time
 
 import pymongo
@@ -187,7 +187,7 @@ def process_cpd_blockfeed(zmq_publisher_eventfeed):
             if 'result' not in running_info:
                 raise AssertionError("Could not contact counterpartyd")
             running_info = running_info['result']
-        except Exception, e:
+        except Exception as e:
             logging.warn(str(e) + " -- Waiting 3 seconds before trying again...")
             time.sleep(3)
             continue
@@ -249,7 +249,7 @@ def process_cpd_blockfeed(zmq_publisher_eventfeed):
             try:
                 cur_block = util.call_jsonrpc_api("get_block_info",
                     {'block_index': cur_block_index}, abort_on_error=True)['result']
-            except Exception, e:
+            except Exception as e:
                 logging.warn(str(e) + " Waiting 3 seconds before trying again...")
                 time.sleep(3)
                 continue
@@ -259,7 +259,7 @@ def process_cpd_blockfeed(zmq_publisher_eventfeed):
             try:
                 block_data = util.call_jsonrpc_api("get_messages",
                     {'block_index': cur_block_index}, abort_on_error=True)['result']
-            except Exception, e:
+            except Exception as e:
                 logging.warn(str(e) + " Waiting 5 seconds before trying again...")
                 time.sleep(5)
                 continue

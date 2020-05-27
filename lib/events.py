@@ -6,8 +6,8 @@ import time
 import copy
 import decimal
 import json
-import urllib
-import StringIO
+import urllib.request, urllib.parse, urllib.error
+import io
 
 import pymongo
 import gevent
@@ -110,7 +110,7 @@ def generate_wallet_stats():
         for e in referer_counts:
             ts = time.mktime(datetime.datetime(e['_id']['year'], e['_id']['month'], e['_id']['day']).timetuple())
             assert ts in new_entries
-            referer_key = urllib.quote(e['_id']['referer']).replace('.', '%2E')
+            referer_key = urllib.parse.quote(e['_id']['referer']).replace('.', '%2E')
             if 'referers' not in new_entries[ts]: new_entries[ts]['referers'] = {}
             if e['_id']['referer'] not in new_entries[ts]['referers']: new_entries[ts]['referers'][referer_key] = 0
             new_entries[ts]['referers'][referer_key] += 1
@@ -161,8 +161,8 @@ def generate_wallet_stats():
         
         if new_entries: #insert the rest
             #logging.info("Stats, new entries: %s" % new_entries.values())
-            mongo_db.wallet_stats.insert(new_entries.values())
-            logging.info("Added wallet statistics for %i full days" % len(new_entries.values()))
+            mongo_db.wallet_stats.insert(list(new_entries.values()))
+            logging.info("Added wallet statistics for %i full days" % len(list(new_entries.values())))
         
     gen_stats_for_network('mainnet')
     gen_stats_for_network('testnet')

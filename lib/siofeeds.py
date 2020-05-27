@@ -183,7 +183,7 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
             self.request['mongo_db'].chat_handles.save(p)
             #make the change active immediately
             handle_lower = handle.lower()
-            for sessid, socket in self.socket.server.sockets.iteritems():
+            for sessid, socket in self.socket.server.sockets.items():
                 if socket.session['handle'].lower() == handle_lower:
                     socket.session['is_op'] = p['is_op']
             if self.socket.session['is_primary_server']: #let all users know
@@ -207,7 +207,7 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
             self.request['mongo_db'].chat_handles.save(p)
             #make the change active immediately
             handle_lower = handle.lower()
-            for sessid, socket in self.socket.server.sockets.iteritems():
+            for sessid, socket in self.socket.server.sockets.items():
 		if 'handle' in socket.session:
                     if socket.session['handle'].lower() == handle_lower:
                         socket.session['banned_until'] = p['banned_until']
@@ -225,7 +225,7 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
             self.request['mongo_db'].chat_handles.save(p)
             #make the change active immediately
             handle_lower = handle.lower()
-            for sessid, socket in self.socket.server.sockets.iteritems():
+            for sessid, socket in self.socket.server.sockets.items():
                 if socket.session.get('handle', None).lower() == handle_lower:
                     socket.session['banned_until'] = None
             if self.socket.session['is_primary_server']:  #let all users know
@@ -251,7 +251,7 @@ class ChatFeedServerNamespace(BaseNamespace, BroadcastMixin):
             self.request['mongo_db'].chat_handles.save(p)
             #make the change active immediately
             handle_lower = handle.lower()
-            for sessid, socket in self.socket.server.sockets.iteritems():
+            for sessid, socket in self.socket.server.sockets.items():
                 if socket.session.get('handle', None).lower() == handle_lower:
                     socket.session['handle'] = new_handle
             if self.socket.session['is_primary_server']: #let all users know

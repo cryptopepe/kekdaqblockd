@@ -18,7 +18,7 @@ def calculate_price(base_quantity, quote_quantity, base_divisibility, quote_divi
 
     try:
         return float(quote_quantity) / float(base_quantity)
-    except Exception, e:
+    except Exception as e:
         return 0
 
 def format_price(base_quantity, quote_quantity, base_divisibility, quote_divisibility):
@@ -210,7 +210,7 @@ def get_market_orders(asset1, asset2, addresses=[], supplies=None, min_fee_provi
             try:
                 fee_provided = order['fee_provided'] / (order['give_quantity'] / 100)
                 user_order['fee_provided'] = format(D(order['fee_provided']) / (D(order['give_quantity']) / D(100)), '.2f')
-            except Exception, e:
+            except Exception as e:
                 fee_provided = min_fee_provided - 1 # exclude
 
             exclude = fee_provided < min_fee_provided
@@ -219,7 +219,7 @@ def get_market_orders(asset1, asset2, addresses=[], supplies=None, min_fee_provi
             try:
                 fee_required = order['fee_required'] / (order['get_quantity'] / 100)
                 user_order['fee_required'] = format(D(order['fee_required']) / (D(order['get_quantity']) / D(100)), '.2f')
-            except Exception, e:
+            except Exception as e:
                 fee_required = max_fee_required + 1 # exclude
 
             exclude = fee_required > max_fee_required
